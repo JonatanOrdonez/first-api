@@ -1,4 +1,7 @@
 import express from 'express';
+import { PORT } from './config/config';
+import {errorHandler} from './middlewares/errorMiddleware';
+import Boom from '@hapi/boom';
 
 const app = express();
 app.use(express.json());
@@ -27,6 +30,10 @@ app.get('/users', (req, res) => {
 
 
 app.post('/users', (req, res) => {
+  if(!req.body.name) {
+    throw Boom.badRequest('Name is required');
+  }
+
   const newUser: User = {
     id: Date.now(),
     name: req.body.name,
@@ -37,8 +44,10 @@ app.post('/users', (req, res) => {
   res.json(newUser);
 });
 
-const port: number = 3000;
+app.use(errorHandler);
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+export default app;
