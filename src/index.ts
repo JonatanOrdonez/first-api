@@ -1,48 +1,19 @@
-import express from 'express';
-import { PORT } from './config/config';
+import express, {Router} from 'express';
+import {PORT} from './config/config';
 import {errorHandler} from './middlewares/errorMiddleware';
-import Boom from '@hapi/boom';
+import userRouter from './features/users/users.router';
 
 const app = express();
 app.use(express.json());
 
-interface User {
-  id: number;
-  name: string;
-}
+const apiRouter = Router();
+app.use('/api', apiRouter);
 
-const users: User[] = [];
-
-app.get('/', (req, res) => {
+apiRouter.get('/', (req, res) => {
   res.status(201).send('Hello, world!');
 });
 
-app.get('/users', (req, res) => {
-  const name = req.query.name;
-
-  if(!name) {
-    return res.json(users);
-  }
-  
-  const filteredUser = users.filter((user) => user.name.includes(String(name)));
-  return res.json(filteredUser);
-});
-
-
-app.post('/users', (req, res) => {
-  if(!req.body.name) {
-    throw Boom.badRequest('Name is required');
-  }
-
-  const newUser: User = {
-    id: Date.now(),
-    name: req.body.name,
-  };
-
-  users.push(newUser);
-  
-  res.json(newUser);
-});
+apiRouter.use('/users', userRouter);
 
 app.use(errorHandler);
 
