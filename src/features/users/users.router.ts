@@ -1,35 +1,11 @@
 import {Router} from 'express';
-import Boom from '@hapi/boom';
-import {User} from './users.types';
+import { createUserController, getUserByIdController, getUsersController } from './users.controller';
 
 const router = Router();
 
-const users: User[] = [];
 
-router.get('/', (req, res) => {
-  const name = req.query.name;
-
-  if(!name) {
-    return res.json(users);
-  }
-  
-  const filteredUser = users.filter((user) => user.name.includes(String(name)));
-  return res.json(filteredUser);
-});
-
-router.post('/', (req, res) => {
-  if(!req.body.name) {
-    throw Boom.badRequest('Name is required');
-  }
-
-  const newUser: User = {
-    id: Date.now(),
-    name: req.body.name,
-  };
-
-  users.push(newUser);
-  
-  res.json(newUser);
-});
+router.get('/', getUsersController);
+router.get('/:id', getUserByIdController);
+router.post('/', createUserController);
 
 export default router;
