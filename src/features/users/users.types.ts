@@ -1,24 +1,24 @@
 export interface User {
   id: string;
-  name: string;
+  userName: string;
   age: number;
   email: string;
 }
 
 export interface GetUsersDTO {
-  name?: string;
+  userName?: string;
   age?: number;
   email?: string;
 }
 
 export interface CreateUserDTO {
-  name: string;
+  userName: string;
   age: number;
   email: string;
 }
 
 export interface UpdateUserDTO {
-  name?: string;
+  userName?: string;
   age?: number;
   email?: string;
 }

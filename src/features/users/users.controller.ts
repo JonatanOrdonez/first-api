@@ -16,7 +16,7 @@ export const getUsersController = async (req: Request, res: Response) => {
 
 
 export const createUserController = async (req: Request, res: Response) => {
-  if(!req.body.name) {
+  if(!req.body.userName) {
     throw Boom.badRequest('Name is required');
   }
 
@@ -29,7 +29,7 @@ export const createUserController = async (req: Request, res: Response) => {
   }
 
   const newUser = await createUserService({
-    name: req.body.name,
+    userName: req.body.userName,
     age: req.body.age,
     email: req.body.email,
   });
