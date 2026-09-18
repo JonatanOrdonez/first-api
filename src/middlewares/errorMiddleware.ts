@@ -18,5 +18,8 @@ export const errorHandler = (
     : Boom.boomify(err);
 
   const { statusCode, payload } = boomError.output;
-  res.status(statusCode).json(payload);
+  res.status(statusCode).json({
+    ...payload,
+    details: (boomError as unknown as { detail?: string }).detail,
+  });
 };

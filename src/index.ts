@@ -2,6 +2,7 @@ import express, {Router} from 'express';
 import {PORT} from './config/config';
 import {errorHandler} from './middlewares/errorMiddleware';
 import userRouter from './features/users/users.router';
+import { initDb } from './db/db';
 
 const app = express();
 app.use(express.json());
@@ -17,7 +18,8 @@ apiRouter.use('/users', userRouter);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await initDb();
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

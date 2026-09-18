@@ -1,56 +1,47 @@
 import { CreateUserDTO, GetUsersDTO, UpdateUserDTO, User } from './users.types';
 import Boom from '@hapi/boom';
+import { pool } from '../../db/db';
 
-let users: User[] = [];
-
-export const getUserByIdRepository = async (id: string): Promise<User | undefined> => {
-  return users.find((user) => user.id === id);
-};
-
-export const getUsersRepository = async (filters: GetUsersDTO): Promise<User[]> => {
-  return users.filter((user) => {
-    if (filters.userName && user.userName !== filters.userName) {
-      return false;
-    }
-    if (filters.age && user.age !== filters.age) {
-      return false;
-    }
-    return true;
-  });
-};
-
-export const createUserRepository = async (user: CreateUserDTO) :Promise<User> => {
-  const newUser: User = {
-    id: crypto.randomUUID(),
-    userName: user.userName,
-    age: user.age,
-    email: user.email,
-  };
+export const getUserByIdRepository = async (id: string): Promise<User> => {
+  const result = await pool.query<User>('SELECT id, name AS "userName", age, email FROM users WHERE id=$1', [id]);
   
-  users.push(newUser);
-
-  return newUser;
-};
-
-export const updateUserRepository = async (id: string, user: UpdateUserDTO): Promise<User> => {
-  const userFound = users.find((user) => user.id === id);
-
-  if(!userFound) {
+  if (result.rowCount === 0) {
     throw Boom.notFound('User not found');
   }
 
-  const userUpdated: User = {
-    ...userFound,
-    age: user.age ?? userFound.age,
-    userName: user.userName ?? userFound.userName,
-    email: user.email ?? userFound.email,
-  };
+  return result.rows[0];
+};
 
-  users = users.map((user) => user.id === id ? userUpdated : user);
+export const getUsersRepository = async (_filters: GetUsersDTO): Promise<User[]> => {
+  const result = await pool.query<User>('SELECT id, name AS "userName", age, email FROM users');
+  return result.rows;
+};
 
-  return userUpdated;
+export const createUserRepository = async (user: CreateUserDTO): Promise<User> => {
+  const result = await pool.query<User>(`
+    INSERT INTO users (name, age, email) VALUES ($1, $2, $3)
+    RETURNING id, name AS "userName", age, email
+    `, [user.userName, user.age, user.email]);
+
+  if (result.rowCount === 0) {
+    throw Boom.badRequest('User cannot be created');
+  }
+
+  return result.rows[0];
+};
+
+export const updateUserRepository = async (id: string, user: UpdateUserDTO): Promise<User> => {
+  await pool.query<User>(`
+    UPDATE users
+    SET
+      name = COALESCE($2, name),
+      age = COALESCE($3, age),
+      email = COALESCE($4, email)
+    WHERE id = $1`, [id, user.userName, user.age, user.email]);
+
+  return getUserByIdRepository(id);
 };
 
 export const deleteUserRepository = async (id: string) : Promise<void> => {
-  users = users.filter((user) => user.id !== id);
+  await pool.query('DELETE FROM users WHERE id = $1', [id]);
 };
